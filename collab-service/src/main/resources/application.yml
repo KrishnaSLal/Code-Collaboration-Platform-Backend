@@ -1,0 +1,48 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: collab-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/collabdb
+    username: root
+    password: root
+
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  app:
+    name: collab-service
+    version: 1.0.0
+    description: Collaboration Service for Code Collaboration Platform
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+
+codesync:
+  auth-service:
+    base-url: http://localhost:8081/api/v1/auth
+  rabbitmq:
+    notifications:
+      exchange: codesync.notifications.exchange
+      queue: codesync.notifications.queue
+      routing-key: notification.session.invite
