@@ -1,0 +1,33 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: file-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/filedb
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  app:
+    name: file-service
+    version: 1.0.0
+    description: File Service for Code Collaboration Platform
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
