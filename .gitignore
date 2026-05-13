@@ -1,0 +1,65 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Maven / Java build output
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# Test and coverage reports
+surefire-reports/
+failsafe-reports/
+jacoco.exec
+coverage/
+
+# Logs and runtime output
+*.log
+logs/
+*.pid
+*.hprof
+heapdump.*
+hs_err_pid*
+replay_pid*
+
+# IDE and editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+
+# OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# SonarQube
+.scannerwork/
+
+# Local IDE/runtime folders
+.edge-temp/
+.metadata/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~

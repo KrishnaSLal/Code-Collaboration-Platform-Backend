@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.codesync</groupId>
+    <artifactId>codesync-backend</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>CodeSync Backend</name>
+    <description>Aggregator build for CodeSync backend microservices.</description>
+
+    <modules>
+        <module>api-gateway</module>
+        <module>auth-service</module>
+        <module>collab-service</module>
+        <module>comment-service</module>
+        <module>config-server</module>
+        <module>eureka-server</module>
+        <module>execution-service</module>
+        <module>file-service</module>
+        <module>notification-service</module>
+        <module>project-service</module>
+        <module>service-registry</module>
+        <module>version-service</module>
+    </modules>
+
+    <properties>
+        <sonar.projectKey>CodeSync</sonar.projectKey>
+        <sonar.projectName>CodeSync</sonar.projectName>
+        <sonar.maven.scanAll>true</sonar.maven.scanAll>
+        <sonar.coverage.jacoco.xmlReportPaths>**/target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>**/target/**,**/.edge-temp/**,**/.metadata/**,**/HELP.md,**/mvnw,**/mvnw.cmd</sonar.exclusions>
+        <sonar.coverage.exclusions>**/*Application.java,**/config/**</sonar.coverage.exclusions>
+    </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>5.5.0.6356</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
