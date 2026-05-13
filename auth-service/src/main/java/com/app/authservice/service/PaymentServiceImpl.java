@@ -1,10 +1,13 @@
 package com.app.authservice.service;
 
-import com.app.authservice.dto.CreatePaymentOrderRequest;
-import com.app.authservice.dto.PaymentOrderResponse;
-import com.app.authservice.dto.VerifyPaymentRequest;
-import com.app.authservice.dto.VerifyPaymentResponse;
-import lombok.RequiredArgsConstructor;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,13 +17,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import com.app.authservice.dto.CreatePaymentOrderRequest;
+import com.app.authservice.dto.PaymentOrderResponse;
+import com.app.authservice.dto.VerifyPaymentRequest;
+import com.app.authservice.dto.VerifyPaymentResponse;
+
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
