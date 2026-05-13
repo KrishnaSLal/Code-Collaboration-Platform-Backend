@@ -1,0 +1,32 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/config
+
+  profiles:
+    active: native
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  app:
+    name: config-server
+    version: 1.0.0
+    description: Config Server for Code Collaboration Platform
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

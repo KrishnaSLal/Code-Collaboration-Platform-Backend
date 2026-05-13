@@ -1,0 +1,33 @@
+server:
+  port: 8086
+
+spring:
+  application:
+    name: version-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/versiondb
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  app:
+    name: version-service
+    version: 1.0.0
+    description: Version Service for Code Collaboration Platform
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka

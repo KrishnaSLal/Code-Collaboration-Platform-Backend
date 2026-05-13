@@ -1,0 +1,216 @@
+version: '3.8'
+
+services:
+  # Service Registry
+  eureka-server:
+    build:
+      context: .
+      dockerfile: eureka-server/Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  # Config Server
+  config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - eureka-server
+      - config-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  # Auth Service
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+    depends_on:
+      - eureka-server
+      - api-gateway
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  # Other Microservices
+  project-service:
+    build:
+      context: .
+      dockerfile: project-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  collab-service:
+    build:
+      context: .
+      dockerfile: collab-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  comment-service:
+    build:
+      context: .
+      dockerfile: comment-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  execution-service:
+    build:
+      context: .
+      dockerfile: execution-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  file-service:
+    build:
+      context: .
+      dockerfile: file-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: notification-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  version-service:
+    build:
+      context: .
+      dockerfile: version-service/Dockerfile
+    depends_on:
+      - eureka-server
+    environment:
+      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
+      - RABBITMQ_HOST=rabbitmq
+    networks:
+      - codesync-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ../codesync-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - codesync-network
+
+  # Database
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: authdb
+    ports:
+      - "3306:3306"
+    networks:
+      - codesync-network
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  # Messaging
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - codesync-network
+
+networks:
+  codesync-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

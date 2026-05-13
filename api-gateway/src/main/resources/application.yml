@@ -1,0 +1,155 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: auth-service-openapi
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/v3/api-docs/auth-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: project-service-openapi
+              uri: lb://PROJECT-SERVICE
+              predicates:
+                - Path=/v3/api-docs/project-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: file-service-openapi
+              uri: lb://FILE-SERVICE
+              predicates:
+                - Path=/v3/api-docs/file-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: collab-service-openapi
+              uri: lb://COLLAB-SERVICE
+              predicates:
+                - Path=/v3/api-docs/collab-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: execution-service-openapi
+              uri: lb://EXECUTION-SERVICE
+              predicates:
+                - Path=/v3/api-docs/execution-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: version-service-openapi
+              uri: lb://VERSION-SERVICE
+              predicates:
+                - Path=/v3/api-docs/version-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: comment-service-openapi
+              uri: lb://COMMENT-SERVICE
+              predicates:
+                - Path=/v3/api-docs/comment-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: notification-service-openapi
+              uri: lb://NOTIFICATION-SERVICE
+              predicates:
+                - Path=/v3/api-docs/notification-service
+              filters:
+                - SetPath=/v3/api-docs
+
+            - id: auth-service
+              uri: lb://AUTH-SERVICE
+              predicates:
+                - Path=/api/v1/auth/**
+
+            - id: project-service
+              uri: lb://PROJECT-SERVICE
+              predicates:
+                - Path=/projects/**
+
+            - id: file-service
+              uri: lb://FILE-SERVICE
+              predicates:
+                - Path=/files/**
+
+            - id: collab-service
+              uri: lb://COLLAB-SERVICE
+              predicates:
+                - Path=/sessions/**
+
+            - id: collab-service-websocket
+              uri: lb:ws://COLLAB-SERVICE
+              predicates:
+                - Path=/ws/collab
+
+            - id: execution-service
+              uri: lb://EXECUTION-SERVICE
+              predicates:
+                - Path=/executions/**
+
+            - id: version-service
+              uri: lb://VERSION-SERVICE
+              predicates:
+                - Path=/versions/**
+
+            - id: comment-service
+              uri: lb://COMMENT-SERVICE
+              predicates:
+                - Path=/comments/**
+
+            - id: notification-service
+              uri: lb://NOTIFICATION-SERVICE
+              predicates:
+                - Path=/notifications/**
+
+          globalcors:
+            corsConfigurations:
+              '[/**]':
+                allowedOrigins:
+                  - "http://localhost:4200"
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - "*"
+                allowCredentials: true
+
+springdoc:
+  api-docs:
+    path: /gateway/v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    urls:
+      - name: Auth Service
+        url: /v3/api-docs/auth-service
+      - name: Project Service
+        url: /v3/api-docs/project-service
+      - name: File Service
+        url: /v3/api-docs/file-service
+      - name: Collaboration Service
+        url: /v3/api-docs/collab-service
+      - name: Execution Service
+        url: /v3/api-docs/execution-service
+      - name: Version Service
+        url: /v3/api-docs/version-service
+      - name: Comment Service
+        url: /v3/api-docs/comment-service
+      - name: Notification Service
+        url: /v3/api-docs/notification-service
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
