@@ -1,0 +1,33 @@
+server:
+  port: 8087
+
+spring:
+  application:
+    name: comment-service
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/commentdb
+    username: root
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+info:
+  app:
+    name: comment-service
+    version: 1.0.0
+    description: Comment Service for Code Collaboration Platform
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
