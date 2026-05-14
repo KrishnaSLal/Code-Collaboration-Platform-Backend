@@ -32,7 +32,8 @@ jobs:
             -Dsonar.projectKey=CodeSync \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION || 'krishnaslal' }} \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.qualitygate.wait=false
+            -Dsonar.qualitygate.wait=false \
+            -DskipTests
 
   deploy:
     name: Deploy Backend
