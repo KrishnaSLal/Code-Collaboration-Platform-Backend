@@ -49,6 +49,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - RABBITMQ_HOST=rabbitmq
+      - JWT_SECRET=${JWT_SECRET}
     networks:
       - codesync-network
 
@@ -66,6 +67,16 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - RABBITMQ_HOST=rabbitmq
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_APP_PASSWORD=${MAIL_APP_PASSWORD}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
+      - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
+      - CODESYNC_EXPOSE_OTP=${CODESYNC_EXPOSE_OTP}
     networks:
       - codesync-network
 
@@ -77,7 +88,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${PROJECT_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -92,7 +103,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${COLLAB_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -107,7 +118,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${COMMENT_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -122,7 +133,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${EXECUTION_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -137,7 +148,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${FILE_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -152,11 +163,13 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${NOTIFICATION_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - RABBITMQ_HOST=rabbitmq
+      - NOTIFICATION_MAIL_USERNAME=${NOTIFICATION_MAIL_USERNAME}
+      - NOTIFICATION_MAIL_PASSWORD=${NOTIFICATION_MAIL_PASSWORD}
     networks:
       - codesync-network
 
@@ -167,7 +180,7 @@ services:
     depends_on:
       - eureka-server
     environment:
-      - SPRING_DATASOURCE_URL=${AUTH_SERVICE_DATASOURCE_URL}
+      - SPRING_DATASOURCE_URL=${VERSION_SERVICE_DATASOURCE_URL}
       - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
@@ -191,13 +204,15 @@ services:
     image: mysql:8.0
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: authdb
+      # We don't specify MYSQL_DATABASE here because we want to create multiple DBs
     ports:
       - "3306:3306"
     networks:
       - codesync-network
     volumes:
       - mysql-data:/var/lib/mysql
+      # Initialization script to create all databases
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
   # Messaging
   rabbitmq:

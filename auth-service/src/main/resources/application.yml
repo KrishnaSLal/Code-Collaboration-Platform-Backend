@@ -1,5 +1,6 @@
 server:
   port: 8081
+  forward-headers-strategy: native
 
 spring:
   application:
@@ -58,7 +59,7 @@ management:
         include: health,info
 
 jwt:
-  secret: 1234567890123456789012345678901234567890123456789012345678901234
+  secret: ${JWT_SECRET:1234567890123456789012345678901234567890123456789012345678901234}
   expiration: 86400000
 
 razorpay:

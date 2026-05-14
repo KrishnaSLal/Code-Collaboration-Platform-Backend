@@ -71,14 +71,7 @@ jobs:
             fi
             cd Code-Collaboration-Platform-backend && git pull origin main
             
-            # Build backend services
-            sudo docker compose up --build -d \
-              eureka-server config-server api-gateway auth-service \
-              project-service collab-service comment-service \
-              execution-service file-service notification-service version-service || \
-            sudo docker-compose up --build -d \
-              eureka-server config-server api-gateway auth-service \
-              project-service collab-service comment-service \
-              execution-service file-service notification-service version-service
+            # Start EVERYTHING in the compose file (including mysql and rabbitmq)
+            sudo docker compose up --build -d || sudo docker-compose up --build -d
               
             sudo docker image prune -f
