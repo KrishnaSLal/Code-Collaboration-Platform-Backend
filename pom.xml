@@ -23,7 +23,6 @@
         <module>file-service</module>
         <module>notification-service</module>
         <module>project-service</module>
-        <module>service-registry</module>
         <module>version-service</module>
     </modules>
 
