@@ -191,7 +191,7 @@ services:
   # Frontend
   frontend:
     build:
-      context: ../codesync-frontend
+      context: ../Code-Collaboration-Platform-frontend
     ports:
       - "80:80"
     depends_on:
