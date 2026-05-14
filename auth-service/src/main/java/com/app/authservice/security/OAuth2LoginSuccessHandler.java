@@ -37,6 +37,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final PasswordEncoder passwordEncoder;
     private final OAuth2AuthorizedClientService authorizedClientService;
 
+    @Value("${CODESYNC_FRONTEND_URL:http://localhost:4200}")
+    private String frontendUrl;
+
     @Override
     public void onAuthenticationSuccess(
             HttpServletRequest request,
@@ -79,7 +82,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
         }
 
         String token = jwtService.generateToken(user.getEmail());
-        String redirectUrl = "http://localhost:4200/oauth-success"
+        String redirectUrl = frontendUrl + "/oauth-success"
                 + "?token=" + encode(token)
                 + "&userId=" + user.getId()
                 + "&fullName=" + encode(user.getFullName())

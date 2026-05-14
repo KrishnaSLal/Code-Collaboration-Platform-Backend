@@ -50,6 +50,7 @@ services:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - RABBITMQ_HOST=rabbitmq
       - JWT_SECRET=${JWT_SECRET}
+      - CODESYNC_FRONTEND_URL=${CODESYNC_FRONTEND_URL}
     networks:
       - codesync-network
 
@@ -77,6 +78,7 @@ services:
       - RAZORPAY_KEY_ID=${RAZORPAY_KEY_ID}
       - RAZORPAY_KEY_SECRET=${RAZORPAY_KEY_SECRET}
       - CODESYNC_EXPOSE_OTP=${CODESYNC_EXPOSE_OTP}
+      - CODESYNC_FRONTEND_URL=${CODESYNC_FRONTEND_URL}
     networks:
       - codesync-network
 
