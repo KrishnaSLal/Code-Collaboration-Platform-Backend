@@ -47,6 +47,21 @@ jobs:
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Function to install Docker if missing
+            install_docker() {
+              if ! command -v docker &> /dev/null; then
+                echo "Installing Docker..."
+                if command -v apt-get &> /dev/null; then
+                  sudo apt-get update && sudo apt-get install -y docker.io docker-compose
+                elif command -v yum &> /dev/null; then
+                  sudo yum update -y && sudo yum install -y docker
+                  sudo systemctl start docker
+                  sudo systemctl enable docker
+                fi
+              fi
+            }
+
+            install_docker
             mkdir -p ~/CodeSync && cd ~/CodeSync
             
             # Auto-clone or pull Backend
@@ -56,7 +71,6 @@ jobs:
             cd Code-Collaboration-Platform-backend && git pull origin main
             
             # Build backend services
-            # Try to use sudo docker compose (modern Docker)
             sudo docker compose up --build -d \
               eureka-server config-server api-gateway auth-service \
               project-service collab-service comment-service \
