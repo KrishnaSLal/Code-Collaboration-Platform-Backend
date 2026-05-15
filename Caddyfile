@@ -1,0 +1,8 @@
+{$CODESYNC_FRONTEND_HOST} {
+    encode gzip
+    reverse_proxy frontend:80
+}
+
+:80 {
+    redir https://{$CODESYNC_FRONTEND_HOST}{uri} permanent
+}

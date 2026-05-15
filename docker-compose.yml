@@ -194,10 +194,27 @@ services:
   frontend:
     build:
       context: ../Code-Collaboration-Platform-frontend
-    ports:
-      - "80:80"
+    expose:
+      - "80"
     depends_on:
       - api-gateway
+    networks:
+      - codesync-network
+
+  # Public HTTPS reverse proxy
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - CODESYNC_FRONTEND_HOST=${CODESYNC_FRONTEND_HOST:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
     networks:
       - codesync-network
 
@@ -231,3 +248,5 @@ networks:
 
 volumes:
   mysql-data:
+  caddy-data:
+  caddy-config:
