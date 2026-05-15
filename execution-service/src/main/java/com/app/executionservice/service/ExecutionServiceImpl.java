@@ -241,20 +241,36 @@ public class ExecutionServiceImpl implements ExecutionService {
             case "java" -> {
                 Path file = workDir.resolve("Main.java");
                 Files.writeString(file, sourceCode, StandardCharsets.UTF_8);
-                yield new ProcessPlan(List.of("cmd", "/c", "javac Main.java && java Main"));
+                yield new ProcessPlan(shellCommand("javac Main.java && java Main"));
             }
             case "c" -> {
                 Path file = workDir.resolve("main.c");
                 Files.writeString(file, sourceCode, StandardCharsets.UTF_8);
-                yield new ProcessPlan(List.of("cmd", "/c", "gcc main.c -o main.exe && main.exe"));
+                yield new ProcessPlan(shellCommand("gcc main.c -o main && ./main", "gcc main.c -o main.exe && main.exe"));
             }
             case "c++", "cpp", "cplusplus" -> {
                 Path file = workDir.resolve("main.cpp");
                 Files.writeString(file, sourceCode, StandardCharsets.UTF_8);
-                yield new ProcessPlan(List.of("cmd", "/c", "g++ main.cpp -o main.exe && main.exe"));
+                yield new ProcessPlan(shellCommand("g++ main.cpp -o main && ./main", "g++ main.cpp -o main.exe && main.exe"));
             }
             default -> throw new IllegalArgumentException("Language is not runnable by this service: " + job.getLanguage());
         };
+    }
+
+    private List<String> shellCommand(String command) {
+        return shellCommand(command, command);
+    }
+
+    private List<String> shellCommand(String unixCommand, String windowsCommand) {
+        if (isWindows()) {
+            return List.of("cmd", "/c", windowsCommand);
+        }
+
+        return List.of("/bin/sh", "-c", unixCommand);
+    }
+
+    private boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase().contains("win");
     }
 
     private String readProcessOutput(byte[] output) {

@@ -184,9 +184,9 @@ class ExecutionServiceImplTest {
             assertPlan("JavaScript", "Main.js", List.of("node", "Main.js"), workDir);
             assertPlan("node", "Main.js", List.of("node", "Main.js"), workDir);
             assertPlan("TypeScript", "Main.ts", List.of("npx", "tsx", "Main.ts"), workDir);
-            assertPlan("Java", "Main.java", List.of("cmd", "/c", "javac Main.java && java Main"), workDir);
-            assertPlan("C", "main.c", List.of("cmd", "/c", "gcc main.c -o main.exe && main.exe"), workDir);
-            assertPlan("cpp", "main.cpp", List.of("cmd", "/c", "g++ main.cpp -o main.exe && main.exe"), workDir);
+            assertPlan("Java", "Main.java", shellCommand("javac Main.java && java Main"), workDir);
+            assertPlan("C", "main.c", shellCommand("gcc main.c -o main && ./main", "gcc main.c -o main.exe && main.exe"), workDir);
+            assertPlan("cpp", "main.cpp", shellCommand("g++ main.cpp -o main && ./main", "g++ main.cpp -o main.exe && main.exe"), workDir);
         } finally {
             ReflectionTestUtils.invokeMethod(executionService, "deleteDirectory", workDir);
         }
@@ -202,7 +202,7 @@ class ExecutionServiceImplTest {
         assertThat((Boolean) ReflectionTestUtils.invokeMethod(executionService, "isRunnableExecutable", " "))
                 .isFalse();
 
-        ProcessBuilder builder = new ProcessBuilder("cmd");
+        ProcessBuilder builder = new ProcessBuilder(isWindows() ? "cmd" : "/bin/sh");
         ReflectionTestUtils.invokeMethod(executionService, "configurePythonEnvironment", builder, (String) null);
         ReflectionTestUtils.invokeMethod(executionService, "configurePythonEnvironment", builder, "node.exe");
 
@@ -236,6 +236,20 @@ class ExecutionServiceImplTest {
                 .stdout("")
                 .stderr("")
                 .build();
+    }
+
+    private List<String> shellCommand(String command) {
+        return shellCommand(command, command);
+    }
+
+    private List<String> shellCommand(String unixCommand, String windowsCommand) {
+        return isWindows()
+                ? List.of("cmd", "/c", windowsCommand)
+                : List.of("/bin/sh", "-c", unixCommand);
+    }
+
+    private boolean isWindows() {
+        return System.getProperty("os.name", "").toLowerCase().contains("win");
     }
 
     @SuppressWarnings("unchecked")
