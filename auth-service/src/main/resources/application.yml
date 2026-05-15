@@ -43,14 +43,14 @@ spring:
               - openid
               - profile
               - email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "${CODESYNC_FRONTEND_URL:http://localhost:4200}/login/oauth2/code/{registrationId}"
           github:
             client-id: ${GITHUB_CLIENT_ID}
             client-secret: ${GITHUB_CLIENT_SECRET}
             scope:
               - read:user
               - user:email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "${CODESYNC_FRONTEND_URL:http://localhost:4200}/login/oauth2/code/{registrationId}"
 
 management:
   endpoints:
