@@ -116,7 +116,7 @@ spring:
             corsConfigurations:
               '[/**]':
                 allowedOrigins:
-                  - "${codesync.frontend-url:http://localhost:4201}"
+                  - "${codesync.frontend-url:http://localhost:4200}"
                 allowedMethods:
                   - GET
                   - POST
