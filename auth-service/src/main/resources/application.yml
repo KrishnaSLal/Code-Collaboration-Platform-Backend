@@ -69,6 +69,7 @@ razorpay:
 codesync:
   auth:
     expose-otp: ${CODESYNC_EXPOSE_OTP:false}
+  frontend-url: ${CODESYNC_FRONTEND_URL:http://localhost:4201}
 
 eureka:
   client:

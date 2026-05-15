@@ -9,7 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class CorsConfig {
 
-    @Value("${CODESYNC_FRONTEND_URL:http://localhost:4200}")
+    @Value("${codesync.frontend-url:http://localhost:4201}")
     private String frontendUrl;
 
     @Bean
