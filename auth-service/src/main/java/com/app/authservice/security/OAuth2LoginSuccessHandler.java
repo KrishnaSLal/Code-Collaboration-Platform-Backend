@@ -39,7 +39,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     private final OAuth2AuthorizedClientService authorizedClientService;
 
     @Value("${codesync.frontend-url:http://localhost:4200}")
-    private String frontendUrl = "http://localhost:4200";
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(
