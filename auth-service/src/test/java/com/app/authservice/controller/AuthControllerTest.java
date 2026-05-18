@@ -39,17 +39,4 @@ class AuthControllerTest {
         assertThat(response).isEqualTo(users);
         verify(authService).getUsersByIds(List.of(8L, 1L, 2L));
     }
-
-    @Test
-    void getCurrentUserDelegatesWithAuthorizationHeader() {
-        UserSummaryResponse user = UserSummaryResponse.builder()
-                .userId(3L)
-                .email("krishna@example.com")
-                .build();
-
-        when(authService.getCurrentUser("Bearer token")).thenReturn(user);
-
-        assertThat(authController.getCurrentUser("Bearer token")).isSameAs(user);
-        verify(authService).getCurrentUser("Bearer token");
-    }
 }

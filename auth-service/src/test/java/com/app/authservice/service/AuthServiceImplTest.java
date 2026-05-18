@@ -340,39 +340,4 @@ class AuthServiceImplTest {
         assertThat(users.get(0).getUserId()).isEqualTo(1L);
         assertThat(users.get(0).getEmail()).isEqualTo("krishna@example.com");
     }
-
-    @Test
-    void getCurrentUserReturnsUserFromValidBearerToken() {
-        AppUser user = AppUser.builder()
-                .id(3L)
-                .fullName("Krishna")
-                .email("krishna@example.com")
-                .role("USER")
-                .build();
-
-        when(jwtService.isTokenValid("jwt-token")).thenReturn(true);
-        when(jwtService.extractEmail("jwt-token")).thenReturn("krishna@example.com");
-        when(userRepository.findByEmail("krishna@example.com")).thenReturn(Optional.of(user));
-
-        UserSummaryResponse response = authService.getCurrentUser("Bearer jwt-token");
-
-        assertThat(response.getUserId()).isEqualTo(3L);
-        assertThat(response.getEmail()).isEqualTo("krishna@example.com");
-    }
-
-    @Test
-    void getCurrentUserRejectsMissingBearerToken() {
-        assertThatThrownBy(() -> authService.getCurrentUser("jwt-token"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Authentication required");
-    }
-
-    @Test
-    void getCurrentUserRejectsInvalidToken() {
-        when(jwtService.isTokenValid("jwt-token")).thenReturn(false);
-
-        assertThatThrownBy(() -> authService.getCurrentUser("Bearer jwt-token"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Invalid or expired token");
-    }
 }

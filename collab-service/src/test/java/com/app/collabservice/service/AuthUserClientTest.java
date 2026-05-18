@@ -3,7 +3,6 @@ package com.app.collabservice.service;
 import com.app.collabservice.dto.UserSummaryResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -14,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
@@ -71,37 +68,5 @@ class AuthUserClientTest {
                 .andRespond(withServerError());
 
         assertThat(client.getUsersByIds(List.of(1L))).isEmpty();
-    }
-
-    @Test
-    void returnsCurrentUserFromBearerToken() {
-        server.expect(requestTo("http://auth.test/api/v1/auth/me"))
-                .andExpect(header(HttpHeaders.AUTHORIZATION, "Bearer token"))
-                .andRespond(withSuccess("""
-                        {"userId":3,"username":"krishna","fullName":"Krishna","email":"krishna@example.com"}
-                        """, MediaType.APPLICATION_JSON));
-
-        UserSummaryResponse user = client.getCurrentUser("Bearer token");
-
-        assertThat(user.getUserId()).isEqualTo(3L);
-        assertThat(user.getEmail()).isEqualTo("krishna@example.com");
-        server.verify();
-    }
-
-    @Test
-    void currentUserRequiresAuthorizationHeader() {
-        assertThatThrownBy(() -> client.getCurrentUser(""))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Authentication required");
-    }
-
-    @Test
-    void currentUserFailsClosedWhenAuthServiceCallFails() {
-        server.expect(requestTo("http://auth.test/api/v1/auth/me"))
-                .andRespond(withServerError());
-
-        assertThatThrownBy(() -> client.getCurrentUser("Bearer token"))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessage("Authentication required");
     }
 }

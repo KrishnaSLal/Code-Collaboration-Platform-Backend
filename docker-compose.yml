@@ -110,7 +110,6 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka
       - RABBITMQ_HOST=rabbitmq
-      - CODESYNC_PROJECT_SERVICE_BASE_URL=http://project-service:8082/projects
     networks:
       - codesync-network
 

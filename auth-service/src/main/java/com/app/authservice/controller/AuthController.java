@@ -4,7 +4,6 @@ import com.app.authservice.dto.*;
 import com.app.authservice.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -50,11 +49,6 @@ public class AuthController {
     @GetMapping("/users")
     public List<UserSummaryResponse> getUsersByIds(@RequestParam("ids") List<String> ids) {
         return authService.getUsersByIds(parseUserIds(ids));
-    }
-
-    @GetMapping("/me")
-    public UserSummaryResponse getCurrentUser(@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
-        return authService.getCurrentUser(authorizationHeader);
     }
 
     @GetMapping("/test")
