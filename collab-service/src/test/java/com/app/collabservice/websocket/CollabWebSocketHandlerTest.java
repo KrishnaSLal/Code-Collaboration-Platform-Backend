@@ -1,6 +1,7 @@
 package com.app.collabservice.websocket;
 
 import com.app.collabservice.dto.CollabSocketMessage;
+import com.app.collabservice.dto.CursorUpdateRequest;
 import com.app.collabservice.dto.ParticipantResponse;
 import com.app.collabservice.service.CollabService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -169,6 +170,30 @@ class CollabWebSocketHandlerTest {
         assertThat(message.getType()).isEqualTo("USER_DISCONNECTED");
         assertThat(message.getUserId()).isEqualTo(42L);
         assertThat(message.getClientId()).isEqualTo("client-a");
+        verify(collabService).updateCursor("session-1", CursorUpdateRequest.builder()
+                .userId(42L)
+                .cursorLine(null)
+                .cursorCol(null)
+                .build());
+    }
+
+    @Test
+    void connectionClosedKeepsCursorWhenSameUserHasAnotherOpenSocket() throws Exception {
+        WebSocketSession closing = session("ws://localhost/collab?sessionId=session-1&userId=42&clientId=client-a");
+        WebSocketSession duplicate = session("ws://localhost/collab?sessionId=session-1&userId=42&clientId=client-c");
+        WebSocketSession remaining = session("ws://localhost/collab?sessionId=session-1&userId=99&clientId=client-b");
+        handler.afterConnectionEstablished(closing);
+        handler.afterConnectionEstablished(duplicate);
+        handler.afterConnectionEstablished(remaining);
+        clearInvocations(closing, duplicate, remaining, collabService);
+
+        handler.afterConnectionClosed(closing, CloseStatus.NORMAL);
+
+        verify(collabService, never()).updateCursor(any(), any());
+        CollabSocketMessage duplicateMessage = sentMessage(duplicate);
+        CollabSocketMessage remainingMessage = sentMessage(remaining);
+        assertThat(duplicateMessage.getType()).isEqualTo("USER_DISCONNECTED");
+        assertThat(remainingMessage.getType()).isEqualTo("USER_DISCONNECTED");
     }
 
     @Test
