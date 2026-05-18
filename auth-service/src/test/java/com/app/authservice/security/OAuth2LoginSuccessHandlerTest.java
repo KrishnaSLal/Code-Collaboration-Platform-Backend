@@ -18,6 +18,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,7 @@ class OAuth2LoginSuccessHandlerTest {
     @BeforeEach
     void setUp() {
         handler = new OAuth2LoginSuccessHandler(userRepository, jwtService, passwordEncoder, authorizedClientService);
+        ReflectionTestUtils.setField(handler, "frontendUrl", "http://localhost:4200");
     }
 
     @Test

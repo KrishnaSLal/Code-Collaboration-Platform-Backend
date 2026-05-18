@@ -3,8 +3,11 @@ package com.app.collabservice.service;
 import com.app.collabservice.dto.UserSummaryResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -55,6 +58,35 @@ public class AuthUserClient {
                     .collect(Collectors.toMap(UserSummaryResponse::getUserId, user -> user));
         } catch (Exception ignored) {
             return Map.of();
+        }
+    }
+
+    public UserSummaryResponse getCurrentUser(String authorizationHeader) {
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            throw new RuntimeException("Authentication required");
+        }
+
+        String url = UriComponentsBuilder.fromHttpUrl(authServiceBaseUrl)
+                .path("/me")
+                .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.AUTHORIZATION, authorizationHeader);
+
+        try {
+            UserSummaryResponse user = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    new HttpEntity<>(headers),
+                    UserSummaryResponse.class
+            ).getBody();
+
+            if (user == null || user.getUserId() == null) {
+                throw new RuntimeException("Authentication required");
+            }
+            return user;
+        } catch (RestClientException exception) {
+            throw new RuntimeException("Authentication required", exception);
         }
     }
 }

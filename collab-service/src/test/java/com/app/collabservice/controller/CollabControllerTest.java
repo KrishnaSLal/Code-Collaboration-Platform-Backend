@@ -49,7 +49,7 @@ class CollabControllerTest {
         CollabSessionResponse session = CollabSessionResponse.builder().sessionId("session-1").build();
         ParticipantResponse participant = ParticipantResponse.builder().userId(8L).build();
 
-        when(collabService.createSession(createRequest)).thenReturn(session);
+        when(collabService.createSession(createRequest, "Bearer token")).thenReturn(session);
         when(collabService.getSessionById("session-1")).thenReturn(session);
         when(collabService.getSessionsByProject(1L)).thenReturn(List.of(session));
         when(collabService.joinSession("session-1", joinRequest)).thenReturn(participant);
@@ -58,7 +58,7 @@ class CollabControllerTest {
         when(collabService.kickParticipant("session-1", kickRequest)).thenReturn(participant);
         when(collabService.getActiveSession(1L)).thenReturn(session);
 
-        assertThat(controller.createSession(createRequest)).isSameAs(session);
+        assertThat(controller.createSession(createRequest, "Bearer token")).isSameAs(session);
         assertThat(controller.getSessionById("session-1")).isSameAs(session);
         assertThat(controller.getSessionsByProject(1L)).containsExactly(session);
         assertThat(controller.sendSessionInvite("session-1", inviteRequest)).isEqualTo("Invite notification queued successfully");

@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface CollabService {
 
-    CollabSessionResponse createSession(CreateSessionRequest request);
+    CollabSessionResponse createSession(CreateSessionRequest request, String authorizationHeader);
 
     CollabSessionResponse getSessionById(String sessionId);
 

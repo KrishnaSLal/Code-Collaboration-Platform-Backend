@@ -3,6 +3,8 @@ package com.app.collabservice.service;
 import com.app.collabservice.dto.*;
 import com.app.collabservice.entity.CollabSession;
 import com.app.collabservice.entity.Participant;
+import com.app.collabservice.exception.AuthenticationRequiredException;
+import com.app.collabservice.exception.CollaborationAccessDeniedException;
 import com.app.collabservice.exception.ParticipantNotFoundException;
 import com.app.collabservice.exception.SessionNotFoundException;
 import com.app.collabservice.messaging.NotificationEventPublisher;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,13 +28,20 @@ public class CollabServiceImpl implements CollabService {
     private final ParticipantRepository participantRepository;
     private final NotificationEventPublisher notificationEventPublisher;
     private final AuthUserClient authUserClient;
+    private final ProjectClient projectClient;
 
     @Override
-    public CollabSessionResponse createSession(CreateSessionRequest request) {
+    public CollabSessionResponse createSession(CreateSessionRequest request, String authorizationHeader) {
+        UserSummaryResponse currentUser = getAuthenticatedUser(authorizationHeader);
+        ProjectResponse project = projectClient.getProjectById(request.getProjectId());
+        if (!Objects.equals(project.getOwnerId(), currentUser.getUserId())) {
+            throw new CollaborationAccessDeniedException("Only the project owner can start a collaboration session");
+        }
+
         CollabSession session = CollabSession.builder()
                 .projectId(request.getProjectId())
                 .fileId(request.getFileId())
-                .ownerId(request.getOwnerId())
+                .ownerId(currentUser.getUserId())
                 .status("ACTIVE")
                 .language(request.getLanguage())
                 .maxParticipants(request.getMaxParticipants())
@@ -43,7 +53,7 @@ public class CollabServiceImpl implements CollabService {
 
         Participant ownerParticipant = Participant.builder()
                 .sessionId(savedSession.getSessionId())
-                .userId(request.getOwnerId())
+                .userId(currentUser.getUserId())
                 .role("HOST")
                 .color(generateColor(0))
                 .build();
@@ -60,8 +70,10 @@ public class CollabServiceImpl implements CollabService {
 
     @Override
     public List<CollabSessionResponse> getSessionsByProject(Long projectId) {
+        ProjectResponse project = projectClient.getProjectById(projectId);
         return sessionRepository.findByProjectId(projectId)
                 .stream()
+                .filter(session -> isProjectOwnerSession(session, project))
                 .map(this::mapSession)
                 .collect(Collectors.toList());
     }
@@ -69,6 +81,7 @@ public class CollabServiceImpl implements CollabService {
     @Override
     public void sendSessionInvite(String sessionId, SessionInviteRequest request) {
         CollabSession session = fetchSession(sessionId);
+        ensureSessionStartedByProjectOwner(session);
         if (!"ACTIVE".equalsIgnoreCase(session.getStatus())) {
             throw new RuntimeException("Cannot invite users to an ended session");
         }
@@ -79,6 +92,7 @@ public class CollabServiceImpl implements CollabService {
     @Override
     public ParticipantResponse joinSession(String sessionId, JoinSessionRequest request) {
         CollabSession session = fetchSession(sessionId);
+        ensureSessionStartedByProjectOwner(session);
 
         if ("ENDED".equalsIgnoreCase(session.getStatus())) {
             throw new RuntimeException("Session already ended");
@@ -132,6 +146,7 @@ public class CollabServiceImpl implements CollabService {
     @Override
     public void endSession(String sessionId) {
         CollabSession session = fetchSession(sessionId);
+        ensureSessionStartedByProjectOwner(session);
         session.setStatus("ENDED");
         session.setEndedAt(LocalDateTime.now());
         sessionRepository.save(session);
@@ -139,7 +154,7 @@ public class CollabServiceImpl implements CollabService {
 
     @Override
     public List<ParticipantResponse> getParticipants(String sessionId) {
-        fetchSession(sessionId);
+        ensureSessionStartedByProjectOwner(fetchSession(sessionId));
         List<Participant> activeParticipants = participantRepository.findBySessionId(sessionId)
                 .stream()
                 .filter(participant -> participant.getLeftAt() == null)
@@ -150,6 +165,7 @@ public class CollabServiceImpl implements CollabService {
 
     @Override
     public ParticipantResponse updateCursor(String sessionId, CursorUpdateRequest request) {
+        ensureSessionStartedByProjectOwner(fetchSession(sessionId));
         Participant participant = participantRepository.findBySessionIdAndUserId(sessionId, request.getUserId())
                 .orElseThrow(() -> new ParticipantNotFoundException("Participant not found in session"));
 
@@ -162,6 +178,7 @@ public class CollabServiceImpl implements CollabService {
     @Override
     public ParticipantResponse kickParticipant(String sessionId, KickParticipantRequest request) {
         CollabSession session = fetchSession(sessionId);
+        ensureSessionStartedByProjectOwner(session);
 
         if (!session.getOwnerId().equals(request.getOwnerId())) {
             throw new RuntimeException("Only session owner can kick participants");
@@ -180,16 +197,39 @@ public class CollabServiceImpl implements CollabService {
 
     @Override
     public CollabSessionResponse getActiveSession(Long projectId) {
+        ProjectResponse project = projectClient.getProjectById(projectId);
         List<CollabSession> activeSessions = sessionRepository.findByProjectIdAndStatus(projectId, "ACTIVE");
-        if (activeSessions.isEmpty()) {
+        List<CollabSession> projectOwnerSessions = activeSessions.stream()
+                .filter(session -> isProjectOwnerSession(session, project))
+                .collect(Collectors.toList());
+        if (projectOwnerSessions.isEmpty()) {
             throw new SessionNotFoundException("No active session found for project: " + projectId);
         }
-        return mapSession(activeSessions.get(0));
+        return mapSession(projectOwnerSessions.get(0));
     }
 
     private CollabSession fetchSession(String sessionId) {
         return sessionRepository.findBySessionId(sessionId)
                 .orElseThrow(() -> new SessionNotFoundException("Session not found with id: " + sessionId));
+    }
+
+    private UserSummaryResponse getAuthenticatedUser(String authorizationHeader) {
+        try {
+            return authUserClient.getCurrentUser(authorizationHeader);
+        } catch (RuntimeException exception) {
+            throw new AuthenticationRequiredException("Authentication required to start a collaboration session");
+        }
+    }
+
+    private void ensureSessionStartedByProjectOwner(CollabSession session) {
+        ProjectResponse project = projectClient.getProjectById(session.getProjectId());
+        if (!isProjectOwnerSession(session, project)) {
+            throw new CollaborationAccessDeniedException("Only the project owner can start a collaboration session");
+        }
+    }
+
+    private boolean isProjectOwnerSession(CollabSession session, ProjectResponse project) {
+        return Objects.equals(session.getOwnerId(), project.getOwnerId());
     }
 
     private CollabSessionResponse mapSession(CollabSession session) {

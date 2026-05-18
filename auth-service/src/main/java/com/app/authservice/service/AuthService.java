@@ -19,4 +19,6 @@ public interface AuthService {
     AuthResponse resetPassword(ResetPasswordRequest request);
 
     List<UserSummaryResponse> getUsersByIds(List<Long> userIds);
+
+    UserSummaryResponse getCurrentUser(String authorizationHeader);
 }

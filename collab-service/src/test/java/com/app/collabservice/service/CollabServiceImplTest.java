@@ -7,15 +7,19 @@ import com.app.collabservice.dto.JoinSessionRequest;
 import com.app.collabservice.dto.KickParticipantRequest;
 import com.app.collabservice.dto.LeaveSessionRequest;
 import com.app.collabservice.dto.ParticipantResponse;
+import com.app.collabservice.dto.ProjectResponse;
 import com.app.collabservice.dto.SessionInviteRequest;
 import com.app.collabservice.dto.UserSummaryResponse;
 import com.app.collabservice.entity.CollabSession;
 import com.app.collabservice.entity.Participant;
+import com.app.collabservice.exception.AuthenticationRequiredException;
+import com.app.collabservice.exception.CollaborationAccessDeniedException;
 import com.app.collabservice.exception.ParticipantNotFoundException;
 import com.app.collabservice.exception.SessionNotFoundException;
 import com.app.collabservice.messaging.NotificationEventPublisher;
 import com.app.collabservice.repository.CollabSessionRepository;
 import com.app.collabservice.repository.ParticipantRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,6 +34,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,28 +53,46 @@ class CollabServiceImplTest {
     @Mock
     private AuthUserClient authUserClient;
 
+    @Mock
+    private ProjectClient projectClient;
+
     @InjectMocks
     private CollabServiceImpl collabService;
+
+    @BeforeEach
+    void setUpProjectOwnership() {
+        lenient().when(projectClient.getProjectById(1L)).thenReturn(ProjectResponse.builder()
+                .projectId(1L)
+                .ownerId(3L)
+                .build());
+    }
 
     @Test
     void createSessionCreatesHostParticipant() {
         CreateSessionRequest request = CreateSessionRequest.builder()
                 .projectId(1L)
                 .fileId(2L)
-                .ownerId(3L)
+                .ownerId(99L)
                 .language("Java")
                 .maxParticipants(5)
                 .passwordProtected(false)
                 .build();
 
+        when(authUserClient.getCurrentUser("Bearer token")).thenReturn(UserSummaryResponse.builder()
+                .userId(3L)
+                .build());
         when(sessionRepository.save(any(CollabSession.class))).thenAnswer(invocation -> {
             CollabSession session = invocation.getArgument(0);
             session.setSessionId("session-1");
             return session;
         });
+        when(projectClient.getProjectById(1L)).thenReturn(ProjectResponse.builder()
+                .projectId(1L)
+                .ownerId(3L)
+                .build());
         when(participantRepository.save(any(Participant.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        CollabSessionResponse response = collabService.createSession(request);
+        CollabSessionResponse response = collabService.createSession(request, "Bearer token");
 
         assertThat(response.getSessionId()).isEqualTo("session-1");
         assertThat(response.getStatus()).isEqualTo("ACTIVE");
@@ -81,6 +104,41 @@ class CollabServiceImplTest {
         assertThat(participantCaptor.getValue().getUserId()).isEqualTo(3L);
         assertThat(participantCaptor.getValue().getRole()).isEqualTo("HOST");
         assertThat(participantCaptor.getValue().getColor()).isEqualTo("#FF5733");
+    }
+
+    @Test
+    void createSessionRejectsWhenAuthenticatedUserIsNotProjectOwner() {
+        CreateSessionRequest request = CreateSessionRequest.builder()
+                .projectId(1L)
+                .fileId(2L)
+                .ownerId(99L)
+                .language("Java")
+                .maxParticipants(5)
+                .passwordProtected(false)
+                .build();
+
+        when(authUserClient.getCurrentUser("Bearer token")).thenReturn(UserSummaryResponse.builder()
+                .userId(99L)
+                .build());
+        when(projectClient.getProjectById(1L)).thenReturn(ProjectResponse.builder()
+                .projectId(1L)
+                .ownerId(3L)
+                .build());
+
+        assertThatThrownBy(() -> collabService.createSession(request, "Bearer token"))
+                .isInstanceOf(CollaborationAccessDeniedException.class)
+                .hasMessage("Only the project owner can start a collaboration session");
+    }
+
+    @Test
+    void createSessionRequiresAuthentication() {
+        when(authUserClient.getCurrentUser(null)).thenThrow(new RuntimeException("Authentication required"));
+
+        assertThatThrownBy(() -> collabService.createSession(CreateSessionRequest.builder()
+                .projectId(1L)
+                .build(), null))
+                .isInstanceOf(AuthenticationRequiredException.class)
+                .hasMessage("Authentication required to start a collaboration session");
     }
 
     @Test
@@ -115,6 +173,19 @@ class CollabServiceImplTest {
 
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getProjectId()).isEqualTo(1L);
+    }
+
+    @Test
+    void getSessionsByProjectIgnoresSessionsNotStartedByProjectOwner() {
+        CollabSession ownerSession = session("session-1", "ACTIVE");
+        CollabSession nonOwnerSession = session("session-2", "ACTIVE");
+        nonOwnerSession.setOwnerId(99L);
+        when(sessionRepository.findByProjectId(1L)).thenReturn(List.of(nonOwnerSession, ownerSession));
+
+        List<CollabSessionResponse> responses = collabService.getSessionsByProject(1L);
+
+        assertThat(responses).extracting(CollabSessionResponse::getSessionId)
+                .containsExactly("session-1");
     }
 
     @Test
@@ -226,6 +297,20 @@ class CollabServiceImplTest {
     }
 
     @Test
+    void joinSessionRejectsSessionNotStartedByProjectOwner() {
+        CollabSession session = session("session-1", "ACTIVE");
+        session.setOwnerId(99L);
+        when(sessionRepository.findBySessionId("session-1")).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> collabService.joinSession("session-1", JoinSessionRequest.builder()
+                .userId(8L)
+                .role("EDITOR")
+                .build()))
+                .isInstanceOf(CollaborationAccessDeniedException.class)
+                .hasMessage("Only the project owner can start a collaboration session");
+    }
+
+    @Test
     void leaveSessionMarksParticipantAsLeft() {
         Participant participant = participant(10L, "session-1", 8L);
         when(participantRepository.findBySessionIdAndUserId("session-1", 8L)).thenReturn(Optional.of(participant));
@@ -253,6 +338,7 @@ class CollabServiceImplTest {
     @Test
     void updateCursorChangesParticipantPosition() {
         Participant participant = participant(10L, "session-1", 8L);
+        when(sessionRepository.findBySessionId("session-1")).thenReturn(Optional.of(session("session-1", "ACTIVE")));
         when(participantRepository.findBySessionIdAndUserId("session-1", 8L)).thenReturn(Optional.of(participant));
         when(participantRepository.save(any(Participant.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -372,6 +458,18 @@ class CollabServiceImplTest {
         CollabSessionResponse response = collabService.getActiveSession(1L);
 
         assertThat(response.getSessionId()).isEqualTo("session-1");
+    }
+
+    @Test
+    void getActiveSessionSkipsSessionsNotStartedByProjectOwner() {
+        CollabSession nonOwnerSession = session("session-1", "ACTIVE");
+        nonOwnerSession.setOwnerId(99L);
+        when(sessionRepository.findByProjectIdAndStatus(1L, "ACTIVE"))
+                .thenReturn(List.of(nonOwnerSession, session("session-2", "ACTIVE")));
+
+        CollabSessionResponse response = collabService.getActiveSession(1L);
+
+        assertThat(response.getSessionId()).isEqualTo("session-2");
     }
 
     @Test

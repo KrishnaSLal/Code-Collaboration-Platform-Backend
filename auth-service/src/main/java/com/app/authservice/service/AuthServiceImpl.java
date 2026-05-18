@@ -193,13 +193,43 @@ public class AuthServiceImpl implements AuthService {
     public List<UserSummaryResponse> getUsersByIds(List<Long> userIds) {
         return userRepository.findAllById(userIds)
                 .stream()
-                .map(user -> UserSummaryResponse.builder()
-                        .userId(user.getId())
-                        .username(user.getFullName())
-                        .fullName(user.getFullName())
-                        .email(user.getEmail())
-                        .role(user.getRole())
-                        .build())
+                .map(this::mapUserSummary)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public UserSummaryResponse getCurrentUser(String authorizationHeader) {
+        String token = extractBearerToken(authorizationHeader);
+        if (!jwtService.isTokenValid(token)) {
+            throw new RuntimeException("Invalid or expired token");
+        }
+
+        String email = jwtService.extractEmail(token);
+        AppUser user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+
+        return mapUserSummary(user);
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Authentication required");
+        }
+
+        String token = authorizationHeader.substring("Bearer ".length()).trim();
+        if (token.isBlank()) {
+            throw new RuntimeException("Authentication required");
+        }
+        return token;
+    }
+
+    private UserSummaryResponse mapUserSummary(AppUser user) {
+        return UserSummaryResponse.builder()
+                .userId(user.getId())
+                .username(user.getFullName())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .build();
     }
 }

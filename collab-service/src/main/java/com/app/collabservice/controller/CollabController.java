@@ -5,6 +5,7 @@ import com.app.collabservice.service.*;
 import com.app.collabservice.websocket.CollabWebSocketHandler;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,8 +19,9 @@ public class CollabController {
     private final CollabWebSocketHandler collabWebSocketHandler;
 
     @PostMapping
-    public CollabSessionResponse createSession(@RequestBody CreateSessionRequest request) {
-        return collabService.createSession(request);
+    public CollabSessionResponse createSession(@RequestBody CreateSessionRequest request,
+                                               @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorizationHeader) {
+        return collabService.createSession(request, authorizationHeader);
     }
 
     @GetMapping("/{sessionId}")
